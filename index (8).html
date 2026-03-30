@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="GHK Attend">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>GHK Attendance</title>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root {
+      --black:#1a1a1a; --white:#fff; --grey:#f0f2f5;
+      --green:#155724; --green-bg:#d4edda; --green-btn:#1a7a3f;
+      --red:#721c24;   --red-bg:#f8d7da;   --red-btn:#c0392b;
+      --blue:#0c5460;  --blue-bg:#d1ecf1;
+      --amber:#856404; --amber-bg:#fff3cd;
+      --muted:#666;    --radius:10px;
+    }
+    html,body { min-height:100%; background:var(--grey); font-family:'Segoe UI',sans-serif; -webkit-font-smoothing:antialiased; }
+    .app { min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:16px 14px 80px; }
+
+    /* Header */
+    .header { width:100%; max-width:400px; display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .logo { font-size:1.05rem; font-weight:700; }
+    .logo span { color:#c00; }
+    .clock { font-size:1rem; font-weight:600; color:var(--muted); letter-spacing:1px; }
+
+    /* Card */
+    .card { width:100%; max-width:400px; background:var(--white); border:2px solid var(--black); border-radius:14px; overflow:hidden; box-shadow:4px 4px 0 var(--black); }
+
+    /* Camera */
+    .cam-wrap { position:relative; width:100%; height:0; padding-bottom:72%; background:#000; overflow:hidden; }
+    video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+    .face-oval { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:140px; height:180px; border:2.5px dashed rgba(255,255,255,0.85); border-radius:50%; pointer-events:none; box-shadow:0 0 0 1000px rgba(0,0,0,0.38); display:none; }
+
+    /* Loading */
+    #ld-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.85); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; text-align:center; z-index:10; }
+    #ld-text { color:#fff; font-size:0.88rem; font-weight:600; line-height:1.6; }
+    #ld-bar  { width:80%; height:6px; background:rgba(255,255,255,0.2); border-radius:10px; overflow:hidden; }
+    #ld-fill { height:100%; width:0%; background:#fff; border-radius:10px; transition:width 0.5s ease; }
+
+    /* Status bar */
+    .sbar { display:flex; align-items:center; gap:8px; padding:11px 16px; border-bottom:1px solid #eee; font-size:0.84rem; font-weight:600; }
+    .dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .dot.green { background:#28a745; }
+    .dot.amber { background:#ffc107; animation:blink 1s infinite; }
+    .dot.red   { background:#dc3545; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* Punch button — changes color based on expected action */
+    .panel { padding:16px 18px 22px; }
+    .btn-punch {
+      display:block; width:100%; padding:16px;
+      border:2px solid var(--black); border-radius:var(--radius);
+      font-size:1.05rem; font-weight:700; cursor:pointer; text-align:center;
+      margin-bottom:10px; transition:all 0.25s; color:#fff;
+      -webkit-tap-highlight-color:transparent;
+      background: var(--green-btn);
+      border-color: var(--green-btn);
+    }
+    .btn-punch.out-mode {
+      background: var(--red-btn);
+      border-color: var(--red-btn);
+    }
+    .btn-punch:disabled { background:#aaa; border-color:#aaa; cursor:not-allowed; }
+    .btn-punch:active:not(:disabled) { transform:scale(0.97); }
+
+    /* Punch hint pill */
+    .punch-hint {
+      text-align:center; font-size:0.75rem; font-weight:600;
+      color:var(--muted); margin-bottom:14px; letter-spacing:0.3px;
+    }
+    .punch-hint span {
+      display:inline-block; padding:3px 10px;
+      border-radius:20px; background:#f0f0f0;
+    }
+
+    .btn {
+      display:block; width:100%; padding:13px;
+      border:2px solid var(--black); border-radius:var(--radius);
+      font-size:0.95rem; font-weight:700; cursor:pointer;
+      background:var(--white); color:var(--black);
+      margin-bottom:10px; text-align:center;
+      -webkit-tap-highlight-color:transparent;
+      transition:transform 0.1s;
+    }
+    .btn:last-child { margin-bottom:0; }
+    .btn:active:not(:disabled) { transform:scale(0.97); }
+    .btn:disabled { background:#e9ecef; border-color:#aaa; color:#aaa; cursor:not-allowed; }
+    .btn.primary { background:var(--black); color:var(--white); }
+
+    .flabel { display:block; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); margin-bottom:5px; }
+    .finput { width:100%; padding:12px 13px; border:2px solid #ccc; border-radius:var(--radius); font-size:0.95rem; outline:none; margin-bottom:12px; }
+    .finput:focus { border-color:var(--black); }
+
+    .alert { padding:11px 13px; border-radius:8px; font-size:0.85rem; font-weight:600; margin-top:12px; line-height:1.5; display:none; }
+    .alert.show    { display:block; }
+    .alert.success { background:var(--green-bg); color:var(--green); border:1px solid #c3e6cb; }
+    .alert.error   { background:var(--red-bg);   color:var(--red);   border:1px solid #f5c6cb; }
+    .alert.info    { background:var(--blue-bg);  color:var(--blue);  border:1px solid #bee5eb; }
+    .alert.warning { background:var(--amber-bg); color:var(--amber); border:1px solid #ffeeba; }
+
+    /* Report */
+    #report-section { display:none; width:100%; max-width:400px; margin-top:14px; }
+    .rcard { background:var(--white); border:2px solid var(--black); border-radius:12px; padding:16px; box-shadow:3px 3px 0 var(--black); }
+    .rcard h3 { font-size:0.95rem; font-weight:700; margin-bottom:10px; }
+    .rbig { font-size:2.5rem; font-weight:800; text-align:center; }
+    .rsub { font-size:0.75rem; color:var(--muted); text-align:center; margin-bottom:12px; }
+    .rrow { display:grid; grid-template-columns:1fr auto auto; gap:8px; align-items:center; padding:7px 0; border-bottom:1px solid #eee; font-size:0.82rem; }
+    .rrow:last-child { border-bottom:none; }
+    .rrow .rname { font-weight:600; }
+    .rrow .rtimes { color:var(--muted); font-size:0.78rem; }
+    .rrow .rhours { font-size:0.75rem; font-weight:700; padding:2px 7px; border-radius:20px; background:#e8f5e9; color:var(--green); white-space:nowrap; }
+    .badge-in  { display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.72rem; font-weight:700; background:#d4edda; color:var(--green); }
+    .badge-out { display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.72rem; font-weight:700; background:#f8d7da; color:var(--red); }
+
+    /* Success screen */
+    #success-screen { display:none; position:fixed; inset:0; background:#fff; z-index:200; flex-direction:column; align-items:center; justify-content:center; padding:32px 24px; text-align:center; }
+    #success-screen.show { display:flex; }
+    .ss-circle { width:130px; height:130px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:3.5rem; margin-bottom:20px; animation:pop 0.45s cubic-bezier(0.34,1.56,0.64,1); border:3px solid var(--black); }
+    .ss-circle.in-circle  { background:#d4edda; border-color:var(--green-btn); }
+    .ss-circle.out-circle { background:#f8d7da; border-color:var(--red-btn); }
+    .ss-circle.reg-circle { background:#d1ecf1; border-color:#0c5460; }
+    .ss-badge { display:inline-block; padding:4px 14px; border-radius:20px; font-size:0.78rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; }
+    .ss-badge.in  { background:#d4edda; color:var(--green); }
+    .ss-badge.out { background:#f8d7da; color:var(--red); }
+    .ss-badge.reg { background:#d1ecf1; color:var(--blue); }
+    .ss-name  { font-size:1.4rem; font-weight:800; margin-bottom:6px; color:var(--black); }
+    .ss-time  { font-size:0.9rem; color:var(--muted); margin-bottom:8px; }
+    .ss-hours { font-size:1.1rem; font-weight:700; color:var(--green); margin-bottom:28px; padding:8px 20px; background:#d4edda; border-radius:30px; display:none; }
+    .ss-back  { width:100%; max-width:300px; padding:15px; background:var(--black); color:#fff; border:none; border-radius:var(--radius); font-size:1rem; font-weight:700; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    @keyframes pop { from{transform:scale(0.3);opacity:0} to{transform:scale(1);opacity:1} }
+
+    .hidden { display:none !important; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="logo">GHK <span>Lab</span> Attendance</div>
+    <div class="clock" id="clock">--:-- --</div>
+  </div>
+
+  <div class="card">
+    <div class="cam-wrap">
+      <video id="video" autoplay muted playsinline webkit-playsinline></video>
+      <div class="face-oval" id="oval"></div>
+      <div id="ld-overlay">
+        <div style="font-size:2.2rem">🧠</div>
+        <div id="ld-text">Loading AI models…<br>Please wait</div>
+        <div id="ld-bar"><div id="ld-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="sbar">
+      <div class="dot amber" id="sdot"></div>
+      <span id="stext">Starting up…</span>
+    </div>
+
+    <!-- Attendance panel -->
+    <div class="panel" id="panel-attend">
+      <div class="punch-hint"><span id="punch-hint-text">🟢 Next punch = IN</span></div>
+      <button class="btn-punch" id="btn-punch">✅  Mark Attendance</button>
+      <button class="btn" id="btn-new-user">＋  Add New Staff</button>
+      <button class="btn" id="btn-report">📋  Today's Report</button>
+      <div class="alert" id="alert-attend"></div>
+    </div>
+
+    <!-- Register panel -->
+    <div class="panel hidden" id="panel-register">
+      <label class="flabel" for="reg-name">Staff Full Name</label>
+      <input type="text" id="reg-name" class="finput" placeholder="e.g. Rahul Sharma" autocomplete="off">
+      <button class="btn primary" id="btn-save">📸  Scan &amp; Save Face</button>
+      <button class="btn" id="btn-cancel">←  Cancel / Go Back</button>
+      <div class="alert" id="alert-reg"></div>
+    </div>
+  </div>
+
+  <!-- Report -->
+  <div id="report-section">
+    <div class="rcard">
+      <h3>📋 Today's Attendance</h3>
+      <div class="rbig" id="rpt-count">…</div>
+      <div class="rsub">Staff Present Today</div>
+      <div id="rpt-list"></div>
+      <button class="btn" id="btn-close-rpt" style="margin-top:12px;">Close Report</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Success screen -->
+<div id="success-screen">
+  <div class="ss-circle" id="ss-circle">✅</div>
+  <div class="ss-badge"  id="ss-badge">IN</div>
+  <div class="ss-name"   id="ss-name"></div>
+  <div class="ss-time"   id="ss-time"></div>
+  <div class="ss-hours"  id="ss-hours"></div>
+  <button class="ss-back" onclick="closeSuccess()">← Next Person</button>
+</div>
+
+<script>
+  // ▼▼▼ PASTE YOUR APPS SCRIPT URL HERE ▼▼▼
+  const GAS_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+  // ▲▲▲ https://script.google.com/macros/s/.../exec ▲▲▲
+
+  let faceMatcher  = null;
+  let isReady      = false;
+  let userLocation = null;
+
+  const video = document.getElementById('video');
+
+  /* Clock */
+  function tickClock() {
+    document.getElementById('clock').textContent =
+      new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:true});
+  }
+  tickClock(); setInterval(tickClock, 10000);
+
+  /* GPS */
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(p) { userLocation = {lat:p.coords.latitude, lng:p.coords.longitude}; },
+      function() {}, {timeout:8000}
+    );
+  }
+
+  /* ── STARTUP ── */
+  window.addEventListener('load', async function() {
+    try {
+      prog('Loading AI models… (1/3)', 20);
+      const M = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(M),
+        faceapi.nets.faceLandmark68TinyNet.loadFromUri(M),
+        faceapi.nets.faceRecognitionNet.loadFromUri(M)
+      ]);
+      prog('Starting camera… (2/3)', 55);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:'user', width:{ideal:320}, height:{ideal:240}}, audio:false
+      });
+      video.srcObject = stream;
+      await video.play();
+      prog('Loading staff database… (3/3)', 82);
+      await loadDatabase();
+      document.getElementById('ld-fill').style.width = '100%';
+      setTimeout(function() {
+        document.getElementById('ld-overlay').style.display = 'none';
+        document.getElementById('oval').style.display = 'block';
+      }, 400);
+    } catch(err) {
+      document.getElementById('ld-text').innerHTML =
+        '❌ ' + err.message + '<br><br>Allow camera in browser settings, then reload.';
+      document.getElementById('ld-fill').style.background = '#f87171';
+    }
+  });
+
+  function prog(msg, pct) {
+    document.getElementById('ld-text').innerHTML = msg;
+    document.getElementById('ld-fill').style.width = pct + '%';
+  }
+
+  /* ── LOAD STAFF DATABASE ── */
+  async function loadDatabase() {
+    const res = await api('getUsers', {});
+    if (res.error) throw new Error(res.error);
+    if (!res.users || res.users.length === 0) {
+      setStatus('No staff yet — tap Add New Staff', 'amber');
+      showPanel('attend'); return;
+    }
+    const descriptors = res.users.map(function(u) {
+      return new faceapi.LabeledFaceDescriptors(
+        u.label, [new Float32Array(JSON.parse(u.descriptor))]
+      );
+    });
+    faceMatcher = new faceapi.FaceMatcher(descriptors, 0.5);
+    isReady = true;
+    setStatus(res.users.length + ' staff loaded — ready!', 'green');
+    showPanel('attend');
+  }
+
+  /* ── MARK ATTENDANCE (IN / OUT) ── */
+  document.getElementById('btn-punch').addEventListener('click', async function() {
+    if (!isReady) { showAlert('alert-attend', 'Still loading — please wait.', 'info'); return; }
+    setBtn('btn-punch', true, '🔍 Scanning face…');
+
+    const det = await detect();
+    if (!det) {
+      setBtn('btn-punch', false, getCurrentPunchLabel());
+      showAlert('alert-attend', '❌ No face detected. Move closer, ensure good lighting.', 'error');
+      return;
+    }
+
+    const match = faceMatcher.findBestMatch(det.descriptor);
+    if (match.label === 'unknown') {
+      setBtn('btn-punch', false, getCurrentPunchLabel());
+      showAlert('alert-attend', '❌ Face not recognised. Are you registered?', 'error');
+      return;
+    }
+
+    showAlert('alert-attend', '⏳ Saving attendance for ' + match.label + '…', 'info');
+    const res = await api('recordAttendance', {name: match.label, gps: userLocation});
+    setBtn('btn-punch', false, getCurrentPunchLabel());
+
+    if (res.error) { showAlert('alert-attend', '⚠️ ' + res.error, 'warning'); return; }
+
+    // Show big success screen
+    showSuccess(res.type, res.name, res.time, res.date, res.workingHours);
+  });
+
+  /* ── ADD NEW STAFF ── */
+  document.getElementById('btn-new-user').addEventListener('click', function() {
+    showPanel('register');
+    document.getElementById('reg-name').focus();
+  });
+  document.getElementById('btn-cancel').addEventListener('click', function() {
+    document.getElementById('reg-name').value = '';
+    showPanel('attend');
+  });
+  document.getElementById('btn-save').addEventListener('click', async function() {
+    const name = document.getElementById('reg-name').value.trim();
+    if (!name) { showAlert('alert-reg', '⚠️ Please enter staff name first.', 'error'); return; }
+    setBtn('btn-save', true, '📸 Scanning face…');
+    const det = await detect();
+    if (!det) {
+      setBtn('btn-save', false, '📸  Scan & Save Face');
+      showAlert('alert-reg', '❌ No face detected. Centre your face in the oval.', 'error'); return;
+    }
+    showAlert('alert-reg', '⏳ Saving to Google Sheet…', 'info');
+    const res = await api('registerUser', {name:name, descriptor:JSON.stringify(Array.from(det.descriptor))});
+    setBtn('btn-save', false, '📸  Scan & Save Face');
+    if (res.success) {
+      document.getElementById('reg-name').value = '';
+      showPanel('attend');
+      await loadDatabase();
+      showSuccess('register', name, '', '', '');
+    } else {
+      showAlert('alert-reg', '⚠️ ' + res.message, 'error');
+    }
+  });
+
+  /* ── TODAY'S REPORT ── */
+  document.getElementById('btn-report').addEventListener('click', async function() {
+    document.getElementById('report-section').style.display = 'block';
+    document.getElementById('rpt-count').textContent = '…';
+    document.getElementById('rpt-list').innerHTML = '<p style="font-size:0.82rem;color:#888;padding:6px 0">Loading…</p>';
+    const res = await api('getDailyReport', {});
+    document.getElementById('rpt-count').textContent = res.count || 0;
+    if (!res.staff || res.staff.length === 0) {
+      document.getElementById('rpt-list').innerHTML =
+        '<p style="font-size:0.82rem;color:#888;text-align:center;padding:8px">No attendance today yet.</p>'; return;
+    }
+    var html = '';
+    res.staff.forEach(function(s, i) {
+      var inBadge  = s.inTime  ? '<span class="badge-in">IN '  + s.inTime  + '</span>' : '<span style="color:#aaa;font-size:0.75rem">No IN</span>';
+      var outBadge = s.outTime ? '<span class="badge-out">OUT ' + s.outTime + '</span>' : '<span style="color:#aaa;font-size:0.75rem">Still in</span>';
+      var hours    = s.workingHours ? '<span class="rhours">⏱ ' + s.workingHours + '</span>' : '';
+      var map      = s.mapLink ? ' <a href="'+s.mapLink+'" target="_blank">📍</a>' : '';
+      html += '<div class="rrow">' +
+        '<div><span class="rname">' + (i+1) + '.  ' + s.name + map + '</span><br>' +
+        '<span class="rtimes">' + inBadge + '  ' + outBadge + '</span></div>' +
+        '<div>' + hours + '</div></div>';
+    });
+    document.getElementById('rpt-list').innerHTML = html;
+  });
+  document.getElementById('btn-close-rpt').addEventListener('click', function() {
+    document.getElementById('report-section').style.display = 'none';
+  });
+
+  /* ── SUCCESS SCREEN ── */
+  function showSuccess(type, name, time, date, hours) {
+    var isReg = type === 'register';
+    var isIN  = type === 'IN';
+    var isOUT = type === 'OUT';
+
+    var circle = document.getElementById('ss-circle');
+    var badge  = document.getElementById('ss-badge');
+    var hoursEl= document.getElementById('ss-hours');
+
+    circle.textContent = isReg ? '🎉' : (isIN ? '🟢' : '🔴');
+    circle.className   = 'ss-circle ' + (isReg ? 'reg-circle' : (isIN ? 'in-circle' : 'out-circle'));
+
+    badge.textContent  = isReg ? 'REGISTERED' : (isIN ? 'PUNCHED IN' : 'PUNCHED OUT');
+    badge.className    = 'ss-badge ' + (isReg ? 'reg' : (isIN ? 'in' : 'out'));
+
+    document.getElementById('ss-name').textContent = name;
+    document.getElementById('ss-time').textContent = isReg ? 'Face saved to Google Sheet' : ('🕐 ' + time + '   📅 ' + date);
+
+    if (isOUT && hours) {
+      hoursEl.textContent = '⏱  Total working hours: ' + hours;
+      hoursEl.style.display = 'block';
+    } else {
+      hoursEl.style.display = 'none';
+    }
+
+    // Update punch button for next person
+    updatePunchButton(null);
+
+    document.getElementById('success-screen').classList.add('show');
+  }
+
+  function closeSuccess() {
+    document.getElementById('success-screen').classList.remove('show');
+  }
+
+  /* ── PUNCH BUTTON STATE ──
+     After a successful punch we don't know who's next
+     so we keep button neutral. The button only changes
+     color AFTER face is detected and matched.
+  ── */
+  function getCurrentPunchLabel() {
+    return '✅  Mark Attendance';
+  }
+
+  function updatePunchButton(type) {
+    var btn  = document.getElementById('btn-punch');
+    var hint = document.getElementById('punch-hint-text');
+    // Reset to neutral — we don't know next person's state
+    btn.classList.remove('out-mode');
+    btn.textContent = '✅  Mark Attendance';
+    hint.textContent = '👆 Face the camera and tap';
+  }
+
+  /* ── HELPERS ── */
+  async function detect() {
+    try {
+      const opts = new faceapi.TinyFaceDetectorOptions({inputSize:224, scoreThreshold:0.4});
+      return await faceapi.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
+    } catch(e) { return null; }
+  }
+
+  async function api(action, payload) {
+    const res = await fetch(GAS_URL + '?action=' + action, {
+      method:'POST', mode:'cors',
+      headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify(payload)
+    });
+    return res.json();
+  }
+
+  function setStatus(msg, color) {
+    document.getElementById('stext').textContent = msg;
+    document.getElementById('sdot').className = 'dot ' + color;
+  }
+  function showPanel(name) {
+    document.getElementById('panel-attend').classList.toggle('hidden',   name !== 'attend');
+    document.getElementById('panel-register').classList.toggle('hidden', name !== 'register');
+  }
+  function setBtn(id, disabled, label) {
+    var b = document.getElementById(id);
+    b.disabled = disabled; b.textContent = label;
+  }
+  function showAlert(id, msg, type) {
+    var el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = 'alert ' + type + ' show';
+    if (type !== 'info') setTimeout(function() { el.classList.remove('show'); }, 4500);
+  }
+</script>
+</body>
+</html>
