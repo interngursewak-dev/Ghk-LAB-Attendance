@@ -17,37 +17,27 @@
     }
     html, body { height: 100%; background: var(--grey); font-family: 'Segoe UI', sans-serif; }
 
-    /* ── LAYOUT ── */
     .app { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 12px 12px 80px; }
 
-    /* ── HEADER ── */
     .header { width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .logo { font-size: 1rem; font-weight: 700; }
     .logo span { color: #c00; }
     .clock { font-size: 0.95rem; font-weight: 600; color: var(--muted); letter-spacing: 1px; }
 
-    /* ── CARD ── */
     .card { width: 100%; max-width: 400px; background: var(--white); border: 2px solid var(--black); border-radius: 14px; overflow: hidden; box-shadow: 4px 4px 0 var(--black); }
 
-    /* ── CAMERA ── */
     .cam-wrap { position: relative; width: 100%; padding-bottom: 70%; background: #111; overflow: hidden; }
     video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-    /* Face oval guide */
     .oval { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%); width: 130px; height: 170px; border: 2.5px dashed rgba(255,255,255,0.8); border-radius: 50%; pointer-events: none; box-shadow: 0 0 0 2000px rgba(0,0,0,0.35); }
 
-    /* Scan bar — green line sweeping when scanning */
-    .scan-bar { position: absolute; left: 50%; transform: translateX(-50%); width: 130px; height: 3px; background: rgba(40,200,100,0.85); border-radius: 2px; display: none; animation: sweep 1.1s ease-in-out infinite; }
-    @keyframes sweep {
-      0%   { top: calc(50% - 85px - 55%*0 ); }
-      50%  { top: calc(50% + 85px - 55%*0 ); }
-      100% { top: calc(50% - 85px - 55%*0 ); }
-    }
-    /* simpler: just move between fixed positions */
+    .scan-bar { position: absolute; left: 50%; transform: translateX(-50%); width: 130px; height: 3px; background: rgba(40,200,100,0.85); border-radius: 2px; display: none; top: 50%; margin-top: -82px; animation: sweep2 1.1s ease-in-out infinite; }
     @keyframes sweep2 { 0%,100%{ margin-top: -82px; } 50%{ margin-top: 50px; } }
-    .scan-bar { top: 50%; margin-top: -82px; animation: sweep2 1.1s ease-in-out infinite; }
 
-    /* ── LOADING BANNER (inside camera, not full overlay) ── */
+    /* ── WARMUP PULSE — subtle green glow on oval when warming up ── */
+    .warmup-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%); width: 134px; height: 174px; border-radius: 50%; pointer-events: none; display: none; animation: warmPulse 1.2s ease-in-out infinite; }
+    @keyframes warmPulse { 0%,100%{ box-shadow: 0 0 0 0 rgba(74,222,128,0); } 50%{ box-shadow: 0 0 16px 4px rgba(74,222,128,0.55); } }
+
     .load-banner { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.82); padding: 10px 16px; }
     .load-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
     .load-txt { color: #fff; font-size: 0.78rem; font-weight: 600; }
@@ -55,7 +45,6 @@
     .load-track { height: 5px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
     .load-fill { height: 100%; background: #4ade80; border-radius: 3px; width: 0%; transition: width 0.5s ease; }
 
-    /* ── STATUS BAR ── */
     .sbar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #eee; font-size: 0.82rem; font-weight: 600; }
     .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
     .dot.green { background: #28a745; }
@@ -63,34 +52,28 @@
     .dot.red   { background: #dc3545; }
     @keyframes blink { 0%,100%{ opacity:1 } 50%{ opacity:0.3 } }
 
-    /* ── PANEL ── */
     .panel { padding: 14px 16px 18px; }
     .hidden { display: none !important; }
 
-    /* PUNCH BUTTON */
     .btn-punch { display: block; width: 100%; padding: 16px; border: none; border-radius: var(--radius); font-size: 1.05rem; font-weight: 700; cursor: pointer; color: #fff; background: var(--green-btn); margin-bottom: 0; transition: transform 0.1s, opacity 0.2s; -webkit-tap-highlight-color: transparent; }
     .btn-punch:disabled { opacity: 0.55; cursor: not-allowed; }
     .btn-punch:active:not(:disabled) { transform: scale(0.97); }
 
-    /* GENERIC BUTTON */
     .btn { display: block; width: 100%; padding: 13px; border: 2px solid var(--black); border-radius: var(--radius); font-size: 0.92rem; font-weight: 700; cursor: pointer; background: var(--white); color: var(--black); text-align: center; -webkit-tap-highlight-color: transparent; transition: transform 0.1s; }
     .btn:active { transform: scale(0.97); }
     .btn.primary { background: var(--black); color: var(--white); border-color: var(--black); }
     .btn.danger  { background: var(--red-btn); color: #fff; border-color: var(--red-btn); }
 
-    /* ── BOTTOM NAV — always visible ── */
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); border-top: 2px solid var(--black); display: flex; z-index: 100; }
     .nav-btn { flex: 1; padding: 12px 8px; border: none; background: none; font-size: 0.72rem; font-weight: 700; color: var(--black); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; -webkit-tap-highlight-color: transparent; border-right: 1px solid #eee; }
     .nav-btn:last-child { border-right: none; }
     .nav-btn:active { background: #f5f5f5; }
     .nav-icon { font-size: 1.3rem; }
 
-    /* FORM */
     .flabel { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 4px; }
     .finput { width: 100%; padding: 12px 13px; border: 2px solid #ccc; border-radius: var(--radius); font-size: 0.95rem; outline: none; margin-bottom: 10px; }
     .finput:focus { border-color: var(--black); }
 
-    /* ALERTS */
     .alert { padding: 10px 12px; border-radius: 8px; font-size: 0.83rem; font-weight: 600; margin-top: 10px; line-height: 1.5; display: none; }
     .alert.show    { display: block; }
     .alert.success { background: var(--green-bg); color: var(--green); }
@@ -98,7 +81,6 @@
     .alert.info    { background: var(--blue-bg);  color: var(--blue); }
     .alert.warning { background: var(--amber-bg); color: var(--amber); }
 
-    /* ── REPORT SHEET ── */
     #report-section { display: none; width: 100%; max-width: 400px; margin-top: 12px; }
     .rcard { background: var(--white); border: 2px solid var(--black); border-radius: 12px; padding: 14px; box-shadow: 3px 3px 0 var(--black); }
     .rcard h3 { font-size: 0.92rem; font-weight: 700; margin-bottom: 8px; }
@@ -112,7 +94,6 @@
     .badge-in  { display: inline-block; padding: 1px 7px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; background: #d4edda; color: var(--green); }
     .badge-out { display: inline-block; padding: 1px 7px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; background: #f8d7da; color: var(--red); }
 
-    /* ── SUCCESS SCREEN ── */
     #ss { display: none; position: fixed; inset: 0; background: #fff; z-index: 200; flex-direction: column; align-items: center; justify-content: center; padding: 28px 20px; text-align: center; }
     #ss.show { display: flex; }
     .ss-icon { font-size: 4rem; margin-bottom: 14px; animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
@@ -127,29 +108,34 @@
     .ss-conf  { font-size: 0.75rem; color: var(--muted); margin-bottom: 24px; }
     .ss-back  { width: 100%; max-width: 280px; padding: 15px; background: var(--black); color: #fff; border: none; border-radius: var(--radius); font-size: 1rem; font-weight: 700; cursor: pointer; }
 
-    /* tip text above punch button */
+    /* ── SAVE STATUS on success screen ── */
+    .ss-save-status { font-size: 0.72rem; margin-bottom: 10px; padding: 5px 12px; border-radius: 20px; background: #f0f2f5; color: #888; transition: all 0.4s; }
+    .ss-save-status.saving { background: #fff3cd; color: #856404; }
+    .ss-save-status.saved  { background: #d4edda; color: #155724; }
+    .ss-save-status.failed { background: #f8d7da; color: #721c24; }
+
+    /* ── FAILURE TOAST — floats at top of screen ── */
+    #fail-toast { position: fixed; top: 12px; left: 50%; transform: translateX(-50%) translateY(-80px); z-index: 999; background: #721c24; color: #fff; padding: 10px 18px; border-radius: 30px; font-size: 0.8rem; font-weight: 700; box-shadow: 0 4px 16px rgba(0,0,0,0.25); transition: transform 0.35s cubic-bezier(0.34,1.3,0.64,1); white-space: nowrap; pointer-events: none; }
+    #fail-toast.show { transform: translateX(-50%) translateY(0); }
+
     .tip { text-align: center; font-size: 0.74rem; color: var(--muted); margin-bottom: 10px; }
   </style>
 </head>
 <body>
 
 <div class="app">
-
   <div class="header">
     <div class="logo">GHK <span>Lab</span> Attendance</div>
     <div class="clock" id="clock">--:-- --</div>
   </div>
 
-  <!-- ── MAIN CARD ── -->
   <div class="card">
-
-    <!-- Camera always starts immediately -->
     <div class="cam-wrap">
       <video id="video" autoplay muted playsinline webkit-playsinline></video>
       <div class="oval" id="oval"></div>
+      <div class="warmup-ring" id="warmup-ring"></div>
       <div class="scan-bar" id="scan-bar"></div>
 
-      <!-- Loading progress at bottom of camera frame — doesn't block camera view -->
       <div class="load-banner" id="load-banner">
         <div class="load-row">
           <span class="load-txt" id="load-txt">⏳ Loading AI models…</span>
@@ -159,20 +145,19 @@
       </div>
     </div>
 
-    <!-- Status dot -->
     <div class="sbar">
       <div class="dot amber" id="sdot"></div>
       <span id="stext">Starting camera…</span>
     </div>
 
-    <!-- ── ATTEND PANEL ── -->
+    <!-- ATTEND PANEL -->
     <div class="panel" id="panel-attend">
       <div class="tip">👆 Centre your face in the oval and tap the button</div>
       <button class="btn-punch" id="btn-punch" disabled>⏳ Loading AI…</button>
       <div class="alert" id="alert-attend"></div>
     </div>
 
-    <!-- ── REGISTER PANEL ── -->
+    <!-- REGISTER PANEL -->
     <div class="panel hidden" id="panel-register">
       <label class="flabel" for="reg-name">Staff Full Name</label>
       <input type="text" id="reg-name" class="finput" placeholder="e.g. Rahul Sharma" autocomplete="off">
@@ -183,10 +168,9 @@
       <button class="btn" id="btn-cancel">← Back</button>
       <div class="alert" id="alert-reg"></div>
     </div>
+  </div>
 
-  </div><!-- /card -->
-
-  <!-- ── REPORT ── -->
+  <!-- REPORT -->
   <div id="report-section">
     <div class="rcard">
       <h3>📋 Today's Attendance</h3>
@@ -196,10 +180,8 @@
       <button class="btn" id="btn-close-rpt" style="margin-top:10px;">✕ Close</button>
     </div>
   </div>
+</div>
 
-</div><!-- /app -->
-
-<!-- ── BOTTOM NAV — always visible on all screens ── -->
 <div class="bottom-nav">
   <button class="nav-btn" id="nav-home" onclick="goHome()">
     <span class="nav-icon">🏠</span>Attendance
@@ -212,80 +194,47 @@
   </button>
 </div>
 
-<!-- ── SUCCESS SCREEN ── -->
+<!-- SUCCESS SCREEN -->
 <div id="ss">
-  <div class="ss-icon" id="ss-icon">✅</div>
+  <div class="ss-icon"  id="ss-icon">✅</div>
   <div class="ss-badge" id="ss-badge">IN</div>
   <div class="ss-name"  id="ss-name"></div>
   <div class="ss-time"  id="ss-time"></div>
   <div class="ss-hours" id="ss-hours"></div>
+  <div class="ss-save-status" id="ss-save-status">💾 Saving to sheet…</div>
   <div class="ss-conf"  id="ss-conf"></div>
   <button class="ss-back" onclick="closeSS()">← Next Person</button>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════
-     OPTIMISED SCRIPT — HTML/CSS above is 100% unchanged
-     Changes vs original:
-       1. Parallel model loading     → ~2–3× faster startup
-       2. Cached detectOpts object   → eliminates per-frame GC
-       3. INPUT_SIZE 128 (was 160)   → ~35% faster on low-end
-       4. Voting-based recognition   → far more accurate than
-                                        single-descriptor average
-       5. Multi-descriptor storage   → stores 5 raw descriptors
-                                        per person (backward-
-                                        compatible with old data)
-       6. Quality gate per frame     → rejects blurry/side-face
-                                        detections automatically
-       7. 3 frames for attendance    → fast punch
-          5 frames for registration  → thorough face capture
-     ═══════════════════════════════════════════════════════════ -->
+<!-- FAILURE TOAST -->
+<div id="fail-toast">⚠️ Sheet save failed — check internet</div>
+
 <script>
   // ▼▼▼ PASTE YOUR APPS SCRIPT URL HERE ▼▼▼
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbwMfjN5xufbzwzAmrJhFJ-3ctcTQWA0rh7LMO6aTnXkWq5i7Vrp-Kj-UikqkpxweDM/exec';
 
   // ── TUNING ──────────────────────────────────────────────────────────────
-  // THRESHOLD: euclidean distance cutoff for a match.
-  //   0.38 = very strict (may reject real staff in bad light)
-  //   0.42 = balanced — recommended for indoor lab use
-  //   0.46 = lenient  (use if staff keep getting rejected)
-  const THRESHOLD          = 0.42;
-
-  // Frames captured during attendance punch.
-  // 3 is fast and accurate with the voting system below.
-  const DETECT_FRAMES      = 3;
-
-  // Frames captured during registration.
-  // All 5 raw descriptors are stored — gives FaceMatcher more reference
-  // points and dramatically improves recognition accuracy.
-  const REG_FRAMES         = 5;
-
-  // Gap between captured frames (ms).
-  // 80 ms is fast enough; going lower risks blurry duplicates.
-  const FRAME_GAP_MS       = 80;
-
-  // Detection input size fed to TinyFaceDetector.
-  // 128 → faster (good for low-end phones)
-  // 160 → slightly more accurate (use if mis-detections occur)
-  const INPUT_SIZE         = 128;
-
-  // Minimum detection confidence per frame (0–1).
-  // Frames below this score are silently discarded — avoids
-  // blurry/side-face frames polluting the vote.
-  const MIN_SCORE          = 0.65;
+  const THRESHOLD     = 0.42;
+  const DETECT_FRAMES = 3;
+  const REG_FRAMES    = 5;
+  const FRAME_GAP_MS  = 80;
+  const INPUT_SIZE    = 128;
+  const MIN_SCORE     = 0.65;
   // ────────────────────────────────────────────────────────────────────────
 
-  const MODEL_URL  = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-  const CACHE_KEY  = 'ghk-models-v3';
+  const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+  const CACHE_KEY = 'ghk-models-v3';
 
-  var faceapi       = null;
-  var faceMatcher   = null;
-  var detectOpts    = null;   // created once after models load — avoids per-frame object creation
-  var isReady       = false;
-  var userLoc       = null;
+  var faceapi     = null;
+  var faceMatcher = null;
+  var detectOpts  = null;
+  var isReady     = false;
+  var isWarmedUp  = false;   // ← NEW: tracks warmup state
+  var userLoc     = null;
 
   const video = document.getElementById('video');
 
-  // ── Clock ───────────────────────────────────────────────────────────────
+  // ── Clock ────────────────────────────────────────────────────────────────
   function tickClock() {
     document.getElementById('clock').textContent =
       new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', hour12:true });
@@ -293,7 +242,7 @@
   tickClock();
   setInterval(tickClock, 15000);
 
-  // ── GPS (non-blocking) ──────────────────────────────────────────────────
+  // ── GPS (non-blocking) ───────────────────────────────────────────────────
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       function(p){ userLoc = { lat: p.coords.latitude, lng: p.coords.longitude }; },
@@ -302,7 +251,7 @@
     );
   }
 
-  // ── STEP 1: start camera IMMEDIATELY ────────────────────────────────────
+  // ── STEP 1: Camera starts immediately ───────────────────────────────────
   navigator.mediaDevices.getUserMedia({
     video: { facingMode:'user', width:{ ideal:320 }, height:{ ideal:240 } },
     audio: false
@@ -316,7 +265,7 @@
     setBtn('btn-punch', false, '❌ Camera unavailable');
   });
 
-  // ── STEP 2: load face-api.js dynamically ────────────────────────────────
+  // ── STEP 2: Load face-api.js ─────────────────────────────────────────────
   function loadFaceApiScript() {
     var s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js';
@@ -325,14 +274,10 @@
     document.head.appendChild(s);
   }
 
-  // ── STEP 3: load all 3 models IN PARALLEL ───────────────────────────────
-  // Original loaded them sequentially (3 awaits one after another).
-  // Promise.all fires all 3 requests simultaneously → ~2-3× faster startup
-  // on both fast and slow connections.
+  // ── STEP 3: Load all 3 models in parallel ────────────────────────────────
   async function loadModels() {
-    prog('Loading AI models in parallel…', 15);
+    prog('Loading AI models…', 15);
     try {
-      // ── Cache setup (same as original) ──────────────────────────────────
       var cache = null;
       try { cache = await caches.open(CACHE_KEY); } catch(e) {}
       if (cache) {
@@ -351,7 +296,6 @@
         };
       }
 
-      // ── KEY CHANGE: all 3 networks load simultaneously ───────────────────
       await Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
         faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
@@ -360,15 +304,19 @@
 
       prog('Models ready — loading staff…', 88);
 
-      // ── Create detectOpts ONCE and reuse for every detection call ────────
-      // Original created `new faceapi.TinyFaceDetectorOptions(…)` inside the
-      // detection loop on every frame — this object is expensive to construct.
       detectOpts = new faceapi.TinyFaceDetectorOptions({
-        inputSize:       INPUT_SIZE,
-        scoreThreshold:  MIN_SCORE    // pre-filters bad detections at the detector level
+        inputSize:      INPUT_SIZE,
+        scoreThreshold: MIN_SCORE
       });
 
-      await loadDatabase();
+      // ── STEP 4: Load staff database + warmup IN PARALLEL ─────────────────
+      // Warmup runs a silent dummy detection while staff data loads from sheet.
+      // Both happen at the same time → no extra wait added.
+      await Promise.all([
+        loadDatabase(),
+        warmupDetector()
+      ]);
+
       document.getElementById('load-banner').style.display = 'none';
 
     } catch(err) {
@@ -377,18 +325,37 @@
     }
   }
 
+  // ── WARMUP: run 2 silent detections immediately after models load ────────
+  // The first real call to the TensorFlow graph is always slow (~300–800ms)
+  // because WebGL shaders need to compile. By running dummy detections now,
+  // the shaders are already compiled and cached when a real user punches in.
+  // We show a subtle green pulse on the oval ring so it feels alive, not frozen.
+  async function warmupDetector() {
+    var ring = document.getElementById('warmup-ring');
+    ring.style.display = 'block';
+    try {
+      // Run 2 warmup frames — first compiles shaders, second confirms stable
+      for (var i = 0; i < 2; i++) {
+        await faceapi
+          .detectSingleFace(video, detectOpts)
+          .withFaceLandmarks(true)
+          .withFaceDescriptor();
+        await sleep(60);
+      }
+    } catch(e) {
+      // Warmup errors are totally fine — just means no face visible yet
+    }
+    ring.style.display = 'none';
+    isWarmedUp = true;
+  }
+
   function prog(msg, pct) {
     document.getElementById('load-txt').textContent  = msg;
     document.getElementById('load-pct').textContent  = pct + '%';
     document.getElementById('load-fill').style.width = pct + '%';
   }
 
-  // ── LOAD STAFF DATABASE ─────────────────────────────────────────────────
-  // Backward-compatible: understands BOTH the old single-descriptor format
-  // (flat Float32Array) and the new multi-descriptor format (array of arrays).
-  // Using multiple reference descriptors per person is how face-api's
-  // FaceMatcher is designed to work — it takes the min distance across all
-  // stored samples, which dramatically reduces false rejections.
+  // ── LOAD STAFF DATABASE ──────────────────────────────────────────────────
   async function loadDatabase() {
     try {
       var res = await api('getUsers', {});
@@ -401,18 +368,12 @@
 
       var labeled = res.users.map(function(u) {
         var raw = JSON.parse(u.descriptor);
-
         var descriptors;
         if (Array.isArray(raw[0])) {
-          // ── NEW FORMAT: array of descriptor arrays ───────────────────────
-          // Stored during registration as [[...128 nums...], [...], ...]
           descriptors = raw.map(function(d) { return new Float32Array(d); });
         } else {
-          // ── LEGACY FORMAT: single flat array ────────────────────────────
-          // Existing registered staff still work without re-registering.
           descriptors = [ new Float32Array(raw) ];
         }
-
         return new faceapi.LabeledFaceDescriptors(u.label, descriptors);
       });
 
@@ -425,46 +386,29 @@
     }
   }
 
-  // ── CORE DETECTION: capture N quality frames ────────────────────────────
-  // Returns an array of raw Float32Array descriptors (one per good frame).
-  // Frames where the detector score is below MIN_SCORE are silently skipped
-  // rather than polluting the result with blurry/side-face data.
+  // ── CAPTURE FRAMES ───────────────────────────────────────────────────────
   async function captureFrames(count) {
     var descriptors = [];
     for (var i = 0; i < count; i++) {
       try {
         var det = await faceapi
-          .detectSingleFace(video, detectOpts)   // reuses cached opts object
+          .detectSingleFace(video, detectOpts)
           .withFaceLandmarks(true)
           .withFaceDescriptor();
-
         if (det && det.detection.score >= MIN_SCORE) {
           descriptors.push(det.descriptor);
         }
-      } catch(e) { /* skip bad frame silently */ }
-
+      } catch(e) {}
       if (i < count - 1) await sleep(FRAME_GAP_MS);
     }
-    // Require at least 60% frame success rate
     return descriptors.length >= Math.ceil(count * 0.6) ? descriptors : null;
   }
 
   function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
-  // ── VOTING-BASED MATCHING ───────────────────────────────────────────────
-  // Instead of averaging all descriptors into one and querying once (original
-  // approach), we query EACH frame independently and hold a vote.
-  //
-  // Why this is more accurate:
-  //   • Outlier frames (e.g. a blink) don't corrupt the combined descriptor.
-  //   • The label that wins the majority of frames wins — robust to noise.
-  //   • FaceMatcher.findBestMatch already picks the closest stored sample
-  //     for each query, so we get the benefit of multi-descriptor storage too.
-  //
-  // Returns { label, avgDistance, frameCount } or null if no majority found.
+  // ── VOTING MATCH ─────────────────────────────────────────────────────────
   function votingMatch(descriptors) {
-    var votes = {};   // label → { count, totalDist }
-
+    var votes = {};
     descriptors.forEach(function(desc) {
       var match = faceMatcher.findBestMatch(desc);
       var lbl   = match.label;
@@ -473,7 +417,6 @@
       votes[lbl].totalDist += match.distance;
     });
 
-    // Find the label with the most votes (ties broken by lower avg distance)
     var bestLabel = null, bestCount = 0, bestAvgDist = Infinity;
     Object.keys(votes).forEach(function(lbl) {
       var v       = votes[lbl];
@@ -485,18 +428,21 @@
       }
     });
 
-    // Majority rule: winner must have > 50% of votes AND clear winning distance
     if (!bestLabel) return null;
-    var majority = bestCount / descriptors.length;
-    if (majority < 0.5) return null;         // no majority — genuinely ambiguous
-    if (bestLabel === 'unknown') return null; // unknown won — reject
+    if ((bestCount / descriptors.length) < 0.5) return null;
+    if (bestLabel === 'unknown') return null;
 
     return { label: bestLabel, avgDistance: bestAvgDist, frameCount: descriptors.length };
   }
 
-  // ── MARK ATTENDANCE ─────────────────────────────────────────────────────
+  // ── MARK ATTENDANCE — optimistic UI ─────────────────────────────────────
+  // Face recognition happens first. As soon as we have a match, the success
+  // screen appears immediately. The Google Sheet save happens in the background.
+  // A small status pill on the success screen shows: Saving → Saved / Failed.
+  // If it fails, a red toast also appears at the top of the screen.
   document.getElementById('btn-punch').addEventListener('click', async function() {
     if (!isReady) { showAlert('alert-attend', '⏳ Still loading — please wait.', 'info'); return; }
+
     setBtn('btn-punch', true, '🔍 Scanning… hold still');
     showScanBar(true);
 
@@ -509,36 +455,50 @@
       return;
     }
 
-    // Voting match — more robust than single-query average
     var result = votingMatch(frames);
-
     if (!result) {
       setBtn('btn-punch', false, '✅  Mark Attendance');
       showAlert('alert-attend', '❌ Face not recognised. Not registered, or try better lighting.', 'error');
       return;
     }
 
-    showAlert('alert-attend', '⏳ Saving for ' + result.label + '…', 'info');
-    var res = await api('recordAttendance', { name: result.label, gps: userLoc });
     setBtn('btn-punch', false, '✅  Mark Attendance');
 
-    if (res.error) { showAlert('alert-attend', '⚠️ ' + res.error, 'warning'); return; }
+    // ── Optimistic: build predicted punch data and show success screen NOW ──
+    var now      = new Date();
+    var timeStr  = now.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', hour12:false });
+    var dateStr  = now.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    var conf     = Math.round(Math.max(0, (1 - result.avgDistance / THRESHOLD)) * 100);
 
-    // Confidence: convert distance to 0–100% (lower distance = higher confidence)
-    var conf = Math.round(Math.max(0, (1 - result.avgDistance / THRESHOLD)) * 100);
-    showSS(res.type, res.name, res.time, res.date, res.workingHours, conf, result.frameCount);
+    // Show success screen immediately — type/hours will be filled once sheet responds
+    showSS('IN', result.label, timeStr, dateStr, '', conf, result.frameCount, true);
+
+    // ── Background save ─────────────────────────────────────────────────────
+    api('recordAttendance', { name: result.label, gps: userLoc })
+      .then(function(res) {
+        if (res.error) {
+          // Sheet returned a business error (e.g. cooldown, already completed)
+          setSaveStatus('failed');
+          showFailToast('⚠️ ' + res.error);
+          return;
+        }
+        // Update the success screen with real server data
+        setSaveStatus('saved');
+        updateSSAfterSave(res.type, res.name, res.time, res.date, res.workingHours, conf, result.frameCount);
+      })
+      .catch(function(err) {
+        setSaveStatus('failed');
+        showFailToast('⚠️ Save failed — check internet');
+      });
   });
 
-  // ── REGISTER ────────────────────────────────────────────────────────────
-  // KEY CHANGE: stores all 5 raw descriptors (as array of arrays) instead of
-  // one averaged descriptor. This gives FaceMatcher 5 reference points per
-  // person instead of 1, significantly improving recognition accuracy.
+  // ── REGISTER — optimistic UI ─────────────────────────────────────────────
   document.getElementById('btn-save').addEventListener('click', async function() {
     var name = document.getElementById('reg-name').value.trim();
     if (!name)    { showAlert('alert-reg', '⚠️ Enter staff name first.', 'error'); return; }
     if (!faceapi) { showAlert('alert-reg', '⏳ AI still loading, please wait.', 'info'); return; }
 
-    setBtn('btn-save', true, '📸 Capturing ' + REG_FRAMES + ' face samples…');
+    setBtn('btn-save', true, '📸 Capturing face samples…');
     showAlert('alert-reg', '⏳ Hold still — capturing face samples…', 'info');
     showScanBar(true);
 
@@ -551,27 +511,35 @@
       return;
     }
 
-    showAlert('alert-reg', '⏳ Saving to Google Sheet…', 'info');
-
-    // Store as array of arrays — loadDatabase() detects this format on reload
-    var descriptorPayload = JSON.stringify(frames.map(function(d) { return Array.from(d); }));
-
-    var res = await api('registerUser', { name: name, descriptor: descriptorPayload });
+    var savedName = name;
     setBtn('btn-save', false, '📸  Scan & Save Face');
+    document.getElementById('reg-name').value = '';
+    goHome();
 
-    if (res.success) {
-      document.getElementById('reg-name').value = '';
-      goHome();
-      await loadDatabase();
-      showSS('register', name, '', '', '', null, frames.length);
-    } else {
-      showAlert('alert-reg', '⚠️ ' + (res.message || 'Unknown error'), 'error');
-    }
+    // ── Show success screen IMMEDIATELY ──────────────────────────────────
+    showSS('register', savedName, '', '', '', null, frames.length, true);
+
+    // ── Save in background ────────────────────────────────────────────────
+    var descriptorPayload = JSON.stringify(frames.map(function(d) { return Array.from(d); }));
+    api('registerUser', { name: savedName, descriptor: descriptorPayload })
+      .then(function(res) {
+        if (res.success) {
+          setSaveStatus('saved');
+          loadDatabase(); // refresh matcher silently
+        } else {
+          setSaveStatus('failed');
+          showFailToast('⚠️ ' + (res.message || 'Registration save failed'));
+        }
+      })
+      .catch(function() {
+        setSaveStatus('failed');
+        showFailToast('⚠️ Registration save failed — check internet');
+      });
   });
 
   document.getElementById('btn-cancel').addEventListener('click', goHome);
 
-  // ── REPORT ──────────────────────────────────────────────────────────────
+  // ── REPORT ───────────────────────────────────────────────────────────────
   document.getElementById('btn-close-rpt').addEventListener('click', function() {
     document.getElementById('report-section').style.display = 'none';
   });
@@ -602,7 +570,7 @@
     }
   }
 
-  // ── NAVIGATION ──────────────────────────────────────────────────────────
+  // ── NAVIGATION ───────────────────────────────────────────────────────────
   function goHome() {
     showPanel('attend');
     document.getElementById('report-section').style.display = 'none';
@@ -618,13 +586,13 @@
   }
 
   // ── SUCCESS SCREEN ───────────────────────────────────────────────────────
-  function showSS(type, name, time, date, hours, conf, frames) {
+  function showSS(type, name, time, date, hours, conf, frames, isSaving) {
     var isReg = type === 'register', isIN = type === 'IN', isOUT = type === 'OUT';
     document.getElementById('ss-icon').textContent  = isReg ? '🎉' : (isIN ? '🟢' : '🔴');
     document.getElementById('ss-badge').textContent = isReg ? 'REGISTERED' : (isIN ? 'PUNCHED IN' : 'PUNCHED OUT');
     document.getElementById('ss-badge').className   = 'ss-badge ' + (isReg ? 'reg' : (isIN ? 'in' : 'out'));
     document.getElementById('ss-name').textContent  = name;
-    document.getElementById('ss-time').textContent  = isReg ? 'Face saved successfully' : ('🕐 ' + time + '   📅 ' + date);
+    document.getElementById('ss-time').textContent  = isReg ? 'Face scanned successfully' : ('🕐 ' + time + '   📅 ' + date);
     var hoursEl = document.getElementById('ss-hours');
     if (isOUT && hours) { hoursEl.textContent = '⏱ Working hours: ' + hours; hoursEl.style.display = 'block'; }
     else { hoursEl.style.display = 'none'; }
@@ -632,13 +600,46 @@
     if (conf !== null && conf !== undefined) {
       confEl.textContent = '🔍 Confidence: ' + conf + '%   |   ' + frames + ' frames matched';
     } else {
-      confEl.textContent = '📸 ' + frames + ' face samples saved for accuracy';
+      confEl.textContent = '📸 ' + frames + ' face samples scanned';
     }
+    // Save status pill
+    setSaveStatus(isSaving ? 'saving' : 'saved');
     document.getElementById('ss').classList.add('show');
   }
+
+  // Called after background save completes — updates screen without re-showing it
+  function updateSSAfterSave(type, name, time, date, hours, conf, frames) {
+    var isOUT = type === 'OUT';
+    document.getElementById('ss-badge').textContent = type === 'IN' ? 'PUNCHED IN' : 'PUNCHED OUT';
+    document.getElementById('ss-badge').className   = 'ss-badge ' + (type === 'IN' ? 'in' : 'out');
+    document.getElementById('ss-icon').textContent  = type === 'IN' ? '🟢' : '🔴';
+    document.getElementById('ss-time').textContent  = '🕐 ' + time + '   📅 ' + date;
+    var hoursEl = document.getElementById('ss-hours');
+    if (isOUT && hours) { hoursEl.textContent = '⏱ Working hours: ' + hours; hoursEl.style.display = 'block'; }
+    else { hoursEl.style.display = 'none'; }
+  }
+
+  function setSaveStatus(state) {
+    var el = document.getElementById('ss-save-status');
+    el.className = 'ss-save-status ' + state;
+    if (state === 'saving') el.textContent = '💾 Saving to sheet…';
+    if (state === 'saved')  el.textContent = '✅ Saved to sheet';
+    if (state === 'failed') el.textContent = '❌ Sheet save failed';
+  }
+
   function closeSS() { document.getElementById('ss').classList.remove('show'); }
 
-  // ── HELPERS ─────────────────────────────────────────────────────────────
+  // ── FAILURE TOAST ────────────────────────────────────────────────────────
+  var toastTimer = null;
+  function showFailToast(msg) {
+    var t = document.getElementById('fail-toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 5000);
+  }
+
+  // ── HELPERS ──────────────────────────────────────────────────────────────
   function showPanel(name) {
     document.getElementById('panel-attend').classList.toggle('hidden',   name !== 'attend');
     document.getElementById('panel-register').classList.toggle('hidden', name !== 'register');
